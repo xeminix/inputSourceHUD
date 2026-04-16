@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mkdir -p .claude/agents .claude/db .claude/dist/hooks .claude/dist/hud .claude/commands .claude/scripts)",
+      "Bash(cp '/var/folders/0q/3gy3lym935g9m6t25kn4z_d40000gn/T/tmp.DB3Jepep7E/project-local/agents/*.md' .claude/agents/)",
+      "Bash(cp /var/folders/0q/3gy3lym935g9m6t25kn4z_d40000gn/T/tmp.DB3Jepep7E/project-local/db/init.sql .claude/db/)",
+      "Bash(cp /var/folders/0q/3gy3lym935g9m6t25kn4z_d40000gn/T/tmp.DB3Jepep7E/project-local/db/helper.sh .claude/db/)",
+      "Bash(cp -r '/var/folders/0q/3gy3lym935g9m6t25kn4z_d40000gn/T/tmp.DB3Jepep7E/project-local/dist/hooks/*' .claude/dist/hooks/)"
+    ]
+  }
+}
