@@ -16,17 +16,16 @@
 
 ## PROJECT
 
-> 아래 섹션을 프로젝트에 맞게 작성하세요.
-
 ### 개요
 
-**프로젝트명** — 한 줄 설명
+**InputSourceHUD** — macOS 앱별 입력 소스 자동 전환 + 커스터마이징 HUD 메뉴바 유틸리티
 
 | 항목 | 값 |
 |------|-----|
-| 기술 스택 | (예: iOS 17+, SwiftUI, SwiftData) |
-| 빌드 방법 | (예: `cd src && xcodegen generate`) |
-| 상태 | (예: 개발 중 / 출시) |
+| 기술 스택 | macOS 15+, Swift 5.9+, SwiftUI + AppKit(NSPanel), UserDefaults, Sparkle 2.x, KeyboardShortcuts |
+| 빌드 방법 | Xcode 프로젝트 (.xcodeproj), Universal Binary (arm64 + x86_64) |
+| Bundle ID | com.codequa.inputSourceHUD |
+| 상태 | 개발 전 (기획 완료) |
 
 ### 상세 문서
 
@@ -34,12 +33,14 @@
 - [Context Monitor](Ref-docs/claude/context-monitor.md) — HUD + compaction 감지/복구
 - [컨벤션](Ref-docs/claude/conventions.md) — 커밋, 주석, 로깅 규칙
 - [셋업](Ref-docs/claude/setup.md) — 새 환경 초기 설정
-
-> 프로젝트별 문서를 추가하세요.
+- [기획 및 개발 계획](Ref-docs/InputSourceHUD-Plan.md) — PRD + 아키텍처 + 개발 로드맵
 
 ### 핵심 규칙
 
-- (프로젝트 고유의 코딩 규칙, 금지 사항 등)
+- TIS API (Carbon) 사용 — InputSource 조회/변경 유일 수단
+- HUD는 NSPanel + nonactivatingPanel — 포커스 훔치지 않음
+- 샌드박스 OFF (Hardened Runtime ON)
+- LSUIElement = YES (Dock 미표시, 메뉴바 앱)
 
 ---
 

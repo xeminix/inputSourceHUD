@@ -1,0 +1,454 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		000000000000000000000201 /* AppEnvironment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000101 /* AppEnvironment.swift */; };
+		000000000000000000000202 /* InputSourceHUDApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000102 /* InputSourceHUDApp.swift */; };
+		000000000000000000000203 /* AppSwitchCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000103 /* AppSwitchCoordinator.swift */; };
+		000000000000000000000204 /* AppSwitchObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000104 /* AppSwitchObserver.swift */; };
+		000000000000000000000205 /* InputSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000105 /* InputSource.swift */; };
+		000000000000000000000206 /* InputSourceChangeObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000106 /* InputSourceChangeObserver.swift */; };
+		000000000000000000000207 /* InputSourceManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000107 /* InputSourceManager.swift */; };
+		000000000000000000000208 /* AppPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000108 /* AppPolicy.swift */; };
+		000000000000000000000209 /* PolicyStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000109 /* PolicyStore.swift */; };
+		00000000000000000000020A /* SecureInputDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000010A /* SecureInputDetector.swift */; };
+		00000000000000000000020B /* HUDContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000010B /* HUDContentView.swift */; };
+		00000000000000000000020C /* HUDWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000010C /* HUDWindow.swift */; };
+		00000000000000000000020D /* HUDWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000010D /* HUDWindowController.swift */; };
+		00000000000000000000020E /* ScreenLocator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000010E /* ScreenLocator.swift */; };
+		00000000000000000000020F /* MenuBarController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000010F /* MenuBarController.swift */; };
+		000000000000000000000210 /* MenuBarIconRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000110 /* MenuBarIconRenderer.swift */; };
+		000000000000000000000211 /* AppsTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000111 /* AppsTab.swift */; };
+		000000000000000000000212 /* GeneralTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000112 /* GeneralTab.swift */; };
+		000000000000000000000213 /* HUDTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000113 /* HUDTab.swift */; };
+		000000000000000000000214 /* SettingsWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000114 /* SettingsWindow.swift */; };
+		000000000000000000000215 /* Log.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000115 /* Log.swift */; };
+		000000000000000000000216 /* SettingsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000116 /* SettingsStore.swift */; };
+		000000000000000000000217 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000117 /* Assets.xcassets */; };
+		000000000000000000000218 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000119 /* PrivacyInfo.xcprivacy */; };
+		000000000000000000000219 /* LaunchAtLoginManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000011A /* LaunchAtLoginManager.swift */; };
+		00000000000000000000021A /* SettingsWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000011B /* SettingsWindowController.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		00000000000000000000000E /* InputSourceHUD.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = InputSourceHUD.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		000000000000000000000101 /* AppEnvironment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppEnvironment.swift; sourceTree = "<group>"; };
+		000000000000000000000102 /* InputSourceHUDApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InputSourceHUDApp.swift; sourceTree = "<group>"; };
+		000000000000000000000103 /* AppSwitchCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSwitchCoordinator.swift; sourceTree = "<group>"; };
+		000000000000000000000104 /* AppSwitchObserver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSwitchObserver.swift; sourceTree = "<group>"; };
+		000000000000000000000105 /* InputSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InputSource.swift; sourceTree = "<group>"; };
+		000000000000000000000106 /* InputSourceChangeObserver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InputSourceChangeObserver.swift; sourceTree = "<group>"; };
+		000000000000000000000107 /* InputSourceManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InputSourceManager.swift; sourceTree = "<group>"; };
+		000000000000000000000108 /* AppPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppPolicy.swift; sourceTree = "<group>"; };
+		000000000000000000000109 /* PolicyStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PolicyStore.swift; sourceTree = "<group>"; };
+		00000000000000000000010A /* SecureInputDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecureInputDetector.swift; sourceTree = "<group>"; };
+		00000000000000000000010B /* HUDContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HUDContentView.swift; sourceTree = "<group>"; };
+		00000000000000000000010C /* HUDWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HUDWindow.swift; sourceTree = "<group>"; };
+		00000000000000000000010D /* HUDWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HUDWindowController.swift; sourceTree = "<group>"; };
+		00000000000000000000010E /* ScreenLocator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenLocator.swift; sourceTree = "<group>"; };
+		00000000000000000000010F /* MenuBarController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarController.swift; sourceTree = "<group>"; };
+		000000000000000000000110 /* MenuBarIconRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarIconRenderer.swift; sourceTree = "<group>"; };
+		000000000000000000000111 /* AppsTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppsTab.swift; sourceTree = "<group>"; };
+		000000000000000000000112 /* GeneralTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeneralTab.swift; sourceTree = "<group>"; };
+		000000000000000000000113 /* HUDTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HUDTab.swift; sourceTree = "<group>"; };
+		000000000000000000000114 /* SettingsWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsWindow.swift; sourceTree = "<group>"; };
+		000000000000000000000115 /* Log.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Log.swift; sourceTree = "<group>"; };
+		000000000000000000000116 /* SettingsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsStore.swift; sourceTree = "<group>"; };
+		000000000000000000000117 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		000000000000000000000118 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		000000000000000000000119 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		00000000000000000000011A /* LaunchAtLoginManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LaunchAtLoginManager.swift; sourceTree = "<group>"; };
+		00000000000000000000011B /* SettingsWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsWindowController.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		00000000000000000000000C /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		000000000000000000000002 = {
+			isa = PBXGroup;
+			children = (
+				00000000000000000000000F /* InputSourceHUD */,
+				000000000000000000000003 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		000000000000000000000003 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				00000000000000000000000E /* InputSourceHUD.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		00000000000000000000000F /* InputSourceHUD */ = {
+			isa = PBXGroup;
+			children = (
+				000000000000000000000010 /* App */,
+				000000000000000000000011 /* Core */,
+				000000000000000000000012 /* Features */,
+				000000000000000000000013 /* Infrastructure */,
+				000000000000000000000014 /* Resources */,
+				000000000000000000000015 /* Supporting */,
+			);
+			path = InputSourceHUD;
+			sourceTree = "<group>";
+		};
+		000000000000000000000010 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				000000000000000000000101 /* AppEnvironment.swift */,
+				000000000000000000000102 /* InputSourceHUDApp.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		000000000000000000000011 /* Core */ = {
+			isa = PBXGroup;
+			children = (
+				000000000000000000000016 /* AppSwitching */,
+				000000000000000000000017 /* InputSource */,
+				000000000000000000000018 /* Policy */,
+				000000000000000000000019 /* SecureInput */,
+			);
+			path = Core;
+			sourceTree = "<group>";
+		};
+		000000000000000000000012 /* Features */ = {
+			isa = PBXGroup;
+			children = (
+				00000000000000000000001A /* HUD */,
+				00000000000000000000001F /* LaunchAtLogin */,
+				00000000000000000000001B /* MenuBar */,
+				00000000000000000000001C /* Settings */,
+			);
+			path = Features;
+			sourceTree = "<group>";
+		};
+		000000000000000000000013 /* Infrastructure */ = {
+			isa = PBXGroup;
+			children = (
+				00000000000000000000001D /* Logging */,
+				00000000000000000000001E /* Storage */,
+			);
+			path = Infrastructure;
+			sourceTree = "<group>";
+		};
+		000000000000000000000014 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				000000000000000000000117 /* Assets.xcassets */,
+				000000000000000000000118 /* Info.plist */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		000000000000000000000015 /* Supporting */ = {
+			isa = PBXGroup;
+			children = (
+				000000000000000000000119 /* PrivacyInfo.xcprivacy */,
+			);
+			path = Supporting;
+			sourceTree = "<group>";
+		};
+		000000000000000000000016 /* AppSwitching */ = {
+			isa = PBXGroup;
+			children = (
+				000000000000000000000103 /* AppSwitchCoordinator.swift */,
+				000000000000000000000104 /* AppSwitchObserver.swift */,
+			);
+			path = AppSwitching;
+			sourceTree = "<group>";
+		};
+		000000000000000000000017 /* InputSource */ = {
+			isa = PBXGroup;
+			children = (
+				000000000000000000000105 /* InputSource.swift */,
+				000000000000000000000106 /* InputSourceChangeObserver.swift */,
+				000000000000000000000107 /* InputSourceManager.swift */,
+			);
+			path = InputSource;
+			sourceTree = "<group>";
+		};
+		000000000000000000000018 /* Policy */ = {
+			isa = PBXGroup;
+			children = (
+				000000000000000000000108 /* AppPolicy.swift */,
+				000000000000000000000109 /* PolicyStore.swift */,
+			);
+			path = Policy;
+			sourceTree = "<group>";
+		};
+		000000000000000000000019 /* SecureInput */ = {
+			isa = PBXGroup;
+			children = (
+				00000000000000000000010A /* SecureInputDetector.swift */,
+			);
+			path = SecureInput;
+			sourceTree = "<group>";
+		};
+		00000000000000000000001A /* HUD */ = {
+			isa = PBXGroup;
+			children = (
+				00000000000000000000010B /* HUDContentView.swift */,
+				00000000000000000000010C /* HUDWindow.swift */,
+				00000000000000000000010D /* HUDWindowController.swift */,
+				00000000000000000000010E /* ScreenLocator.swift */,
+			);
+			path = HUD;
+			sourceTree = "<group>";
+		};
+		00000000000000000000001B /* MenuBar */ = {
+			isa = PBXGroup;
+			children = (
+				00000000000000000000010F /* MenuBarController.swift */,
+				000000000000000000000110 /* MenuBarIconRenderer.swift */,
+			);
+			path = MenuBar;
+			sourceTree = "<group>";
+		};
+		00000000000000000000001C /* Settings */ = {
+			isa = PBXGroup;
+			children = (
+				000000000000000000000111 /* AppsTab.swift */,
+				000000000000000000000112 /* GeneralTab.swift */,
+				000000000000000000000113 /* HUDTab.swift */,
+				00000000000000000000011B /* SettingsWindowController.swift */,
+				000000000000000000000114 /* SettingsWindow.swift */,
+			);
+			path = Settings;
+			sourceTree = "<group>";
+		};
+		00000000000000000000001D /* Logging */ = {
+			isa = PBXGroup;
+			children = (
+				000000000000000000000115 /* Log.swift */,
+			);
+			path = Logging;
+			sourceTree = "<group>";
+		};
+		00000000000000000000001E /* Storage */ = {
+			isa = PBXGroup;
+			children = (
+				000000000000000000000116 /* SettingsStore.swift */,
+			);
+			path = Storage;
+			sourceTree = "<group>";
+		};
+		00000000000000000000001F /* LaunchAtLogin */ = {
+			isa = PBXGroup;
+			children = (
+				00000000000000000000011A /* LaunchAtLoginManager.swift */,
+			);
+			path = LaunchAtLogin;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		000000000000000000000004 /* InputSourceHUD */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 000000000000000000000008 /* Build configuration list for PBXNativeTarget "InputSourceHUD" */;
+			buildPhases = (
+				00000000000000000000000B /* Sources */,
+				00000000000000000000000C /* Frameworks */,
+				00000000000000000000000D /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = InputSourceHUD;
+			packageProductDependencies = (
+			);
+			productName = InputSourceHUD;
+			productReference = 00000000000000000000000E /* InputSourceHUD.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		000000000000000000000001 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastUpgradeCheck = 2640;
+				TargetAttributes = {
+					000000000000000000000004 = {
+						CreatedOnToolsVersion = 26.4;
+					};
+				};
+			};
+			buildConfigurationList = 000000000000000000000005 /* Build configuration list for PBXProject "InputSourceHUD" */;
+			compatibilityVersion = "Xcode 16.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 000000000000000000000002;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 000000000000000000000003 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				000000000000000000000004 /* InputSourceHUD */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		00000000000000000000000D /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				000000000000000000000217 /* Assets.xcassets in Resources */,
+				000000000000000000000218 /* PrivacyInfo.xcprivacy in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		00000000000000000000000B /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				000000000000000000000201 /* AppEnvironment.swift in Sources */,
+				000000000000000000000202 /* InputSourceHUDApp.swift in Sources */,
+				000000000000000000000203 /* AppSwitchCoordinator.swift in Sources */,
+				000000000000000000000204 /* AppSwitchObserver.swift in Sources */,
+				000000000000000000000205 /* InputSource.swift in Sources */,
+				000000000000000000000206 /* InputSourceChangeObserver.swift in Sources */,
+				000000000000000000000207 /* InputSourceManager.swift in Sources */,
+				000000000000000000000208 /* AppPolicy.swift in Sources */,
+				000000000000000000000209 /* PolicyStore.swift in Sources */,
+				00000000000000000000020A /* SecureInputDetector.swift in Sources */,
+				00000000000000000000020B /* HUDContentView.swift in Sources */,
+				00000000000000000000020C /* HUDWindow.swift in Sources */,
+				00000000000000000000020D /* HUDWindowController.swift in Sources */,
+				00000000000000000000020E /* ScreenLocator.swift in Sources */,
+				00000000000000000000020F /* MenuBarController.swift in Sources */,
+				000000000000000000000210 /* MenuBarIconRenderer.swift in Sources */,
+				000000000000000000000211 /* AppsTab.swift in Sources */,
+				000000000000000000000212 /* GeneralTab.swift in Sources */,
+				000000000000000000000213 /* HUDTab.swift in Sources */,
+				000000000000000000000214 /* SettingsWindow.swift in Sources */,
+				000000000000000000000215 /* Log.swift in Sources */,
+				000000000000000000000216 /* SettingsStore.swift in Sources */,
+				000000000000000000000219 /* LaunchAtLoginManager.swift in Sources */,
+				00000000000000000000021A /* SettingsWindowController.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		000000000000000000000006 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
+				SDKROOT = macosx;
+				SWIFT_VERSION = 6.0;
+			};
+			name = Debug;
+		};
+		000000000000000000000007 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
+				SDKROOT = macosx;
+				SWIFT_VERSION = 6.0;
+			};
+			name = Release;
+		};
+		000000000000000000000009 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = InputSourceHUD/Resources/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.codequa.inputSourceHUD;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SUPPORTED_PLATFORMS = macosx;
+				SWIFT_VERSION = 6.0;
+			};
+			name = Debug;
+		};
+		00000000000000000000000A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = InputSourceHUD/Resources/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.codequa.inputSourceHUD;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SUPPORTED_PLATFORMS = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_VERSION = 6.0;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		000000000000000000000005 /* Build configuration list for PBXProject "InputSourceHUD" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				000000000000000000000006 /* Debug */,
+				000000000000000000000007 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		000000000000000000000008 /* Build configuration list for PBXNativeTarget "InputSourceHUD" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				000000000000000000000009 /* Debug */,
+				00000000000000000000000A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 000000000000000000000001 /* Project object */;
+}
