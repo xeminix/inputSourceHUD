@@ -90,17 +90,22 @@ struct SettingsWindow: View {
     @State private var selectedScreen: SettingsScreen = .general
 
     var body: some View {
-        HStack(spacing: 0) {
-            sidebar
+        GeometryReader { geo in
+            let topInset = max(geo.safeAreaInsets.top, 28)
+            HStack(spacing: 0) {
+                sidebar(topInset: topInset)
 
-            Rectangle()
-                .fill(Color.white.opacity(0.14))
-                .frame(width: 1)
-                .frame(maxHeight: .infinity)
+                Rectangle()
+                    .fill(Color.white.opacity(0.14))
+                    .frame(width: 1)
+                    .frame(maxHeight: .infinity)
 
-            content
+                content
+                    .padding(.top, topInset)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .ignoresSafeArea()
         .frame(minWidth: 960, minHeight: 620)
         .background {
             ZStack {
@@ -122,7 +127,7 @@ struct SettingsWindow: View {
         }
     }
 
-    private var sidebar: some View {
+    private func sidebar(topInset: CGFloat) -> some View {
         VStack(alignment: .leading, spacing: 28) {
             VStack(alignment: .leading, spacing: 14) {
                 SettingsPill(text: "ABC / 한", tint: SettingsPalette.accentSoft, foreground: SettingsPalette.ink)
@@ -175,14 +180,11 @@ struct SettingsWindow: View {
             }
         }
         .padding(.horizontal, 24)
-        .padding(.top, 20)
+        .padding(.top, topInset + 12)
         .padding(.bottom, 28)
         .frame(width: 288, alignment: .topLeading)
         .frame(maxHeight: .infinity, alignment: .topLeading)
-        .background {
-            SettingsPalette.sidebarBackground
-                .ignoresSafeArea()
-        }
+        .background(SettingsPalette.sidebarBackground)
     }
 
     @ViewBuilder

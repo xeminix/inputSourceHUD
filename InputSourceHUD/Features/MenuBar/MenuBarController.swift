@@ -129,11 +129,37 @@ final class MenuBarController: NSObject, NSMenuDelegate {
             )
             sourceItem.target = self
             sourceItem.representedObject = (app, source)
-            if existingRule?.inputSourceId == source.id {
+            if existingRule?.policy == .force, existingRule?.inputSourceId == source.id {
                 sourceItem.state = .on
             }
             submenu.addItem(sourceItem)
         }
+
+        submenu.addItem(.separator())
+
+        let defaultItem = NSMenuItem(
+            title: "Use Default",
+            action: #selector(setRuleToDefault(_:)),
+            keyEquivalent: ""
+        )
+        defaultItem.target = self
+        defaultItem.representedObject = app
+        if existingRule?.policy == .useGlobalDefault {
+            defaultItem.state = .on
+        }
+        submenu.addItem(defaultItem)
+
+        if existingRule != nil {
+            let removeItem = NSMenuItem(
+                title: "Remove Rule",
+                action: #selector(removeRule(_:)),
+                keyEquivalent: ""
+            )
+            removeItem.target = self
+            removeItem.representedObject = app
+            submenu.addItem(removeItem)
+        }
+
         addRuleItem.submenu = submenu
     }
 
@@ -174,6 +200,32 @@ final class MenuBarController: NSObject, NSMenuDelegate {
             displayName: app.localizedName ?? bundleID,
             inputSourceId: source.id
         )
+    }
+
+    @objc
+    private func setRuleToDefault(_ sender: NSMenuItem) {
+        guard let app = sender.representedObject as? NSRunningApplication,
+              let bundleID = app.bundleIdentifier
+        else {
+            return
+        }
+        let rule = AppRule(
+            bundleId: bundleID,
+            displayName: app.localizedName ?? bundleID,
+            policy: .useGlobalDefault,
+            inputSourceId: nil
+        )
+        policyStore.upsert(rule: rule)
+    }
+
+    @objc
+    private func removeRule(_ sender: NSMenuItem) {
+        guard let app = sender.representedObject as? NSRunningApplication,
+              let bundleID = app.bundleIdentifier
+        else {
+            return
+        }
+        policyStore.removeRule(for: bundleID)
     }
 
     @objc

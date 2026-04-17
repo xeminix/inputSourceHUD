@@ -144,6 +144,20 @@ final class AppEnvironment: ObservableObject {
         refreshApplicationCatalogs()
     }
 
+    func toggleRule(for item: AppSelectionItem, inputSourceID: String) {
+        let existing = policyStore.rule(for: item.bundleID)
+        if existing?.policy == .force, existing?.inputSourceId == inputSourceID {
+            policyStore.removeRule(for: item.bundleID)
+        } else {
+            policyStore.upsertForceRule(
+                bundleID: item.bundleID,
+                displayName: item.displayName,
+                inputSourceId: inputSourceID
+            )
+        }
+        refreshApplicationCatalogs()
+    }
+
     func defaultRuleInputSource() -> InputSource? {
         guard let inputSourceID = settingsStore.settings.global.defaultInputSourceId else {
             return nil

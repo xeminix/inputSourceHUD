@@ -13,6 +13,11 @@ final class PolicyStore {
         settingsStore.settings.apps.first { $0.bundleId == bundleID }
     }
 
+    func removeRule(for bundleID: String) {
+        settingsStore.settings.apps.removeAll { $0.bundleId == bundleID }
+        Log.app.info("Removed rule for \(bundleID, privacy: .public)")
+    }
+
     func upsert(rule: AppRule) {
         if let index = settingsStore.settings.apps.firstIndex(where: { $0.bundleId == rule.bundleId }) {
             settingsStore.settings.apps[index] = rule

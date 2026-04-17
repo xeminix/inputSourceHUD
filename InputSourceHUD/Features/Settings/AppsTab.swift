@@ -82,9 +82,8 @@ struct AppsTab: View {
                                     item: item,
                                     availableInputSources: availableInputSources,
                                     currentRule: appEnvironment.rule(for: item.bundleID)
-                                ) {
-                                    selectedInputSource in
-                                    appEnvironment.assignRule(for: item, inputSourceID: selectedInputSource.id)
+                                ) { selectedInputSource in
+                                    appEnvironment.toggleRule(for: item, inputSourceID: selectedInputSource.id)
                                 }
                             }
                         }
@@ -110,9 +109,8 @@ struct AppsTab: View {
                                     item: item,
                                     availableInputSources: availableInputSources,
                                     currentRule: appEnvironment.rule(for: item.bundleID)
-                                ) {
-                                    selectedInputSource in
-                                    appEnvironment.assignRule(for: item, inputSourceID: selectedInputSource.id)
+                                ) { selectedInputSource in
+                                    appEnvironment.toggleRule(for: item, inputSourceID: selectedInputSource.id)
                                 }
                             }
                         }
@@ -178,8 +176,9 @@ private struct AppSelectionCard: View {
                     )
                 } else if item.isFrontmost {
                     SettingsPill(
-                        text: "ACTIVE",
-                        tint: SettingsPalette.success.opacity(0.88)
+                        text: "FOCUSED",
+                        tint: SettingsPalette.steel.opacity(0.32),
+                        foreground: SettingsPalette.ink
                     )
                 }
             }

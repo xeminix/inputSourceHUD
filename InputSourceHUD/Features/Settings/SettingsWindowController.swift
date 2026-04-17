@@ -26,7 +26,6 @@ final class SettingsWindowController: NSWindowController {
         window.title = "InputSourceHUD Settings"
         window.titleVisibility = .hidden
         window.titlebarAppearsTransparent = true
-        window.toolbarStyle = .unifiedCompact
 
         super.init(window: window)
         shouldCascadeWindows = false
