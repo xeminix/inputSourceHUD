@@ -106,7 +106,7 @@ struct SettingsWindow: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         }
         .ignoresSafeArea()
-        .frame(minWidth: 960, minHeight: 620)
+        .frame(minWidth: 960, minHeight: 740)
         .background {
             ZStack {
                 SettingsPalette.windowBackground
@@ -168,6 +168,16 @@ struct SettingsWindow: View {
 
             Spacer()
 
+            HStack(spacing: 6) {
+                Text("Version")
+                    .font(.system(size: 10, weight: .semibold, design: .rounded))
+                    .tracking(0.8)
+                    .foregroundStyle(Color.white.opacity(0.38))
+                Text(appVersionDisplay)
+                    .font(.system(size: 11, weight: .medium, design: .rounded))
+                    .foregroundStyle(Color.white.opacity(0.62))
+            }
+
             VStack(alignment: .leading, spacing: 8) {
                 Text("Current Focus")
                     .font(.system(size: 11, weight: .bold, design: .rounded))
@@ -200,6 +210,13 @@ struct SettingsWindow: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+    }
+
+    private var appVersionDisplay: String {
+        let info = Bundle.main.infoDictionary
+        let short = info?["CFBundleShortVersionString"] as? String ?? "?"
+        let build = info?["CFBundleVersion"] as? String ?? "?"
+        return "\(short) (\(build))"
     }
 
     private var currentDefaultInputSourceName: String {

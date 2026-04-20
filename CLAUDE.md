@@ -34,6 +34,7 @@
 - [컨벤션](Ref-docs/claude/conventions.md) — 커밋, 주석, 로깅 규칙
 - [셋업](Ref-docs/claude/setup.md) — 새 환경 초기 설정
 - [기획 및 개발 계획](Ref-docs/InputSourceHUD-Plan.md) — PRD + 아키텍처 + 개발 로드맵
+- [릴리즈 런북](Ref-docs/InputSourceHUD-Release-Runbook.md) — InputSourceHUD 배포 절차와 Sparkle appcast 갱신 순서
 
 ### 핵심 규칙
 

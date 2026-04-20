@@ -12,8 +12,14 @@ struct AppsTab: View {
         appEnvironment.availableInputSources()
     }
 
+    // 드롭다운에 표시할 대상: 실행 중인 앱 중 이미 규칙이 없는 것만.
+    // (AppEnvironment.runningApplications는 InputSourceHUD 자신을 이미 제외함)
+    private var runningAppsWithoutRule: [AppSelectionItem] {
+        appEnvironment.runningApplications.filter { appEnvironment.rule(for: $0.bundleID) == nil }
+    }
+
     var body: some View {
-        ScrollView(.vertical, showsIndicators: false) {
+        ScrollView(.vertical, showsIndicators: true) {
             VStack(alignment: .leading, spacing: 24) {
                 SettingsSectionHeader(
                     eyebrow: "PER-APP",
@@ -27,10 +33,31 @@ struct AppsTab: View {
                     tint: SettingsPalette.accent
                 ) {
                     HStack(spacing: 12) {
-                        Button("Add Frontmost App") {
-                            appEnvironment.addRuleForFrontmostApplication()
+                        Menu {
+                            ForEach(runningAppsWithoutRule) { item in
+                                Button {
+                                    appEnvironment.addRule(for: item)
+                                } label: {
+                                    Text(item.displayName)
+                                }
+                            }
+
+                            if runningAppsWithoutRule.isEmpty {
+                                Text("실행 중인 앱 중 규칙에 추가할 수 있는 것이 없습니다")
+                            }
+                        } label: {
+                            Text("Add Running App…")
                         }
-                        .buttonStyle(SettingsProminentButtonStyle(tint: SettingsPalette.accent))
+                        .menuStyle(.borderlessButton)
+                        .fixedSize()
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 8)
+                        .background(
+                            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                                .fill(SettingsPalette.accent)
+                        )
+                        .foregroundStyle(Color.white)
+                        .font(.system(size: 13, weight: .semibold, design: .rounded))
 
                         Button("Choose App…") {
                             appEnvironment.addRuleFromApplicationPicker()
@@ -174,13 +201,11 @@ private struct AppSelectionCard: View {
                         tint: currentRuleBadgeTint(for: currentRule),
                         foreground: currentRuleBadgeForeground(for: currentRule)
                     )
-                } else if item.isFrontmost {
-                    SettingsPill(
-                        text: "FOCUSED",
-                        tint: SettingsPalette.steel.opacity(0.32),
-                        foreground: SettingsPalette.ink
-                    )
                 }
+                // FOCUSED 뱃지는 UI에서 숨김 — item.isFrontmost 판정은 정렬 등 다른 곳에서 여전히 사용
+                // else if item.isFrontmost {
+                //     SettingsPill(text: "FOCUSED", tint: SettingsPalette.steel.opacity(0.32), foreground: SettingsPalette.ink)
+                // }
             }
 
             VStack(alignment: .leading, spacing: 4) {
@@ -203,7 +228,12 @@ private struct AppSelectionCard: View {
                     .tracking(0.7)
                     .foregroundStyle(SettingsPalette.steel.opacity(0.76))
 
-                HStack(spacing: 8) {
+                // adaptive GridItem — 2개는 한 행에 들어가고, 3개 이상이면 자동 2행 wrap.
+                LazyVGrid(
+                    columns: [GridItem(.adaptive(minimum: 72), spacing: 8)],
+                    alignment: .leading,
+                    spacing: 8
+                ) {
                     ForEach(availableInputSources) { inputSource in
                         Button(inputSource.hudDetailName) {
                             onSelectInputSource(inputSource)
@@ -365,16 +395,16 @@ private struct AppRuleRow: View {
                     .buttonStyle(SettingsGhostButtonStyle(tint: .red))
             }
 
-            Divider()
-
-            SettingsRow(
-                title: "Display Name",
-                description: "설정 창과 HUD에서 표시할 이름입니다.",
-                accessoryWidth: 240
-            ) {
-                TextField("Display Name", text: $rule.displayName)
-                    .textFieldStyle(.roundedBorder)
-            }
+            // Display Name 행은 UI에서 숨김 — 향후 고급 옵션으로 복구할 수 있도록 코드는 유지.
+            // Divider()
+            // SettingsRow(
+            //     title: "Display Name",
+            //     description: "설정 창과 HUD에서 표시할 이름입니다.",
+            //     accessoryWidth: 240
+            // ) {
+            //     TextField("Display Name", text: $rule.displayName)
+            //         .textFieldStyle(.roundedBorder)
+            // }
 
             Divider()
 
@@ -385,8 +415,7 @@ private struct AppRuleRow: View {
             ) {
                 Picker("", selection: policyBinding) {
                     ForEach(AppPolicy.allCases) { policy in
-                        Text(policy.title)
-                            .tag(policy)
+                        Text(policy.title).tag(policy)
                     }
                 }
                 .labelsHidden()

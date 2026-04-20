@@ -14,6 +14,28 @@ struct GlobalSettings: Codable {
     var defaultInputSourceId: String? = "com.apple.keylayout.ABC"
     var debounceMillis = 100
     var launchAtLogin = false
+    var liveInputSourceCyclePreviewEnabled = true
+
+    enum CodingKeys: String, CodingKey {
+        case enabled
+        case defaultInputSourceId
+        case debounceMillis
+        case launchAtLogin
+        case liveInputSourceCyclePreviewEnabled
+    }
+
+    init() {}
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        enabled = try container.decodeIfPresent(Bool.self, forKey: .enabled) ?? true
+        defaultInputSourceId = try container.decodeIfPresent(String.self, forKey: .defaultInputSourceId)
+            ?? "com.apple.keylayout.ABC"
+        debounceMillis = try container.decodeIfPresent(Int.self, forKey: .debounceMillis) ?? 100
+        launchAtLogin = try container.decodeIfPresent(Bool.self, forKey: .launchAtLogin) ?? false
+        liveInputSourceCyclePreviewEnabled =
+            try container.decodeIfPresent(Bool.self, forKey: .liveInputSourceCyclePreviewEnabled) ?? true
+    }
 }
 
 struct CodableColor: Codable, Equatable {
@@ -45,10 +67,10 @@ struct CodableColor: Codable, Equatable {
 
 struct HUDSettings: Codable {
     var enabled = true
-    var showWhenAlreadyMatched = true
+    var showWhenAlreadyMatched = false
     var showOnManualInputSourceChange = true
     var durationSeconds = 1.0
-    var backgroundOpacity: Double = 1.0
+    var backgroundOpacity: Double = 0.3
     var textOpacity: Double = 1.0
     var layout = HUDLayoutSettings()
     var backgroundColor: CodableColor? = nil
@@ -78,11 +100,11 @@ struct HUDSettings: Codable {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         enabled = try container.decodeIfPresent(Bool.self, forKey: .enabled) ?? true
         showWhenAlreadyMatched =
-            try container.decodeIfPresent(Bool.self, forKey: .showWhenAlreadyMatched) ?? true
+            try container.decodeIfPresent(Bool.self, forKey: .showWhenAlreadyMatched) ?? false
         showOnManualInputSourceChange =
             try container.decodeIfPresent(Bool.self, forKey: .showOnManualInputSourceChange) ?? true
         durationSeconds = try container.decodeIfPresent(Double.self, forKey: .durationSeconds) ?? 1.0
-        backgroundOpacity = try container.decodeIfPresent(Double.self, forKey: .backgroundOpacity) ?? 1.0
+        backgroundOpacity = try container.decodeIfPresent(Double.self, forKey: .backgroundOpacity) ?? 0.3
         textOpacity = try container.decodeIfPresent(Double.self, forKey: .textOpacity) ?? 1.0
         layout = try container.decodeIfPresent(HUDLayoutSettings.self, forKey: .layout) ?? HUDLayoutSettings()
         layout.normalizeUniquePositions()

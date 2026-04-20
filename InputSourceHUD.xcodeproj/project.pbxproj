@@ -33,6 +33,7 @@
 		000000000000000000000218 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000119 /* PrivacyInfo.xcprivacy */; };
 		000000000000000000000219 /* LaunchAtLoginManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000011A /* LaunchAtLoginManager.swift */; };
 		00000000000000000000021A /* SettingsWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000011B /* SettingsWindowController.swift */; };
+		00000000000000000000021B /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = 000000000000000000000301 /* Sparkle */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -71,6 +72,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				00000000000000000000021B /* Sparkle in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -272,6 +274,7 @@
 			);
 			name = InputSourceHUD;
 			packageProductDependencies = (
+				000000000000000000000301 /* Sparkle */,
 			);
 			productName = InputSourceHUD;
 			productReference = 00000000000000000000000E /* InputSourceHUD.app */;
@@ -303,6 +306,9 @@
 			minimizedProjectReferenceProxies = 1;
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 000000000000000000000003 /* Products */;
+			packageReferences = (
+				000000000000000000000302 /* XCRemoteSwiftPackageReference "Sparkle" */,
+			);
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
@@ -357,6 +363,17 @@
 		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin XCRemoteSwiftPackageReference section */
+		000000000000000000000302 /* XCRemoteSwiftPackageReference "Sparkle" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/sparkle-project/Sparkle";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.9.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
 /* Begin XCBuildConfiguration section */
 		000000000000000000000006 /* Debug */ = {
 			isa = XCBuildConfiguration;
@@ -388,7 +405,9 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CURRENT_PROJECT_VERSION = 115;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = InputSourceHUD/Resources/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -396,10 +415,12 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
-				MARKETING_VERSION = 0.1.0;
+				MARKETING_VERSION = 1.1.5;
 				PRODUCT_BUNDLE_IDENTIFIER = com.codequa.inputSourceHUD;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
+				SPARKLE_APPCAST_URL = "https://raw.githubusercontent.com/xeminix/xeminix_release/main/inputsourcehud/appcast.xml";
+				SPARKLE_PUBLIC_ED_KEY = "M+vdQtqGxvOYxd4VxCs8hnqzJGLgXBbrpebSuO1AKiY=";
 				SUPPORTED_PLATFORMS = macosx;
 				SWIFT_VERSION = 6.0;
 			};
@@ -409,7 +430,9 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CURRENT_PROJECT_VERSION = 115;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = InputSourceHUD/Resources/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -417,10 +440,12 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
-				MARKETING_VERSION = 0.1.0;
+				MARKETING_VERSION = 1.1.5;
 				PRODUCT_BUNDLE_IDENTIFIER = com.codequa.inputSourceHUD;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
+				SPARKLE_APPCAST_URL = "https://raw.githubusercontent.com/xeminix/xeminix_release/main/inputsourcehud/appcast.xml";
+				SPARKLE_PUBLIC_ED_KEY = "M+vdQtqGxvOYxd4VxCs8hnqzJGLgXBbrpebSuO1AKiY=";
 				SUPPORTED_PLATFORMS = macosx;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_VERSION = 6.0;
@@ -428,6 +453,14 @@
 			name = Release;
 		};
 /* End XCBuildConfiguration section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		000000000000000000000301 /* Sparkle */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 000000000000000000000302 /* XCRemoteSwiftPackageReference "Sparkle" */;
+			productName = Sparkle;
+		};
+/* End XCSwiftPackageProductDependency section */
 
 /* Begin XCConfigurationList section */
 		000000000000000000000005 /* Build configuration list for PBXProject "InputSourceHUD" */ = {

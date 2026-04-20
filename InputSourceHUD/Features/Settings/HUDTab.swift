@@ -6,7 +6,7 @@ struct HUDTab: View {
     @EnvironmentObject private var settingsStore: SettingsStore
 
     var body: some View {
-        ScrollView(.vertical, showsIndicators: false) {
+        ScrollView(.vertical, showsIndicators: true) {
             VStack(alignment: .leading, spacing: 24) {
                 SettingsSectionHeader(
                     eyebrow: "OVERLAY",
@@ -82,6 +82,67 @@ struct HUDTab: View {
                 }
 
                 SettingsSectionCard(
+                    title: "Layout Customization",
+                    description: "프리뷰 안의 요소를 드래그해서 미리 지정된 슬롯 사이에서 위치를 바꿀 수 있습니다.",
+                    tint: SettingsPalette.warning
+                ) {
+                    HUDPreviewCanvas(
+                        layout: $settingsStore.settings.hud.layout,
+                        payload: previewPayload,
+                        backgroundOpacity: settingsStore.settings.hud.backgroundOpacity,
+                        textOpacity: settingsStore.settings.hud.textOpacity,
+                        backgroundColor: settingsStore.settings.hud.backgroundColor?.color,
+                        mainTextColor: settingsStore.settings.hud.mainTextColor?.color,
+                        identityTextColor: settingsStore.settings.hud.identityTextColor?.color,
+                        badgeTextColor: settingsStore.settings.hud.badgeTextColor?.color,
+                        detailTextColor: settingsStore.settings.hud.detailTextColor?.color
+                    )
+
+                    SettingsInfoCallout(
+                        title: "How It Works",
+                        message: "프리뷰 안의 요소를 드래그해서 원하는 위치 슬롯에 놓으면 스냅됩니다. 이미 점유된 슬롯에 놓으면 두 요소가 서로 위치를 교환합니다.",
+                        symbolName: "hand.draw.fill",
+                        tint: SettingsPalette.accent
+                    )
+
+                    VStack(spacing: 12) {
+                        ForEach(HUDAccessoryKind.allCases) { kind in
+                            HUDComponentControlRow(
+                                kind: kind,
+                                layout: $settingsStore.settings.hud.layout
+                            )
+                        }
+                    }
+
+                    HStack {
+                        Button("Preview HUD") {
+                            appEnvironment.previewHUD()
+                        }
+                        .buttonStyle(SettingsProminentButtonStyle(tint: SettingsPalette.accent))
+
+                        Spacer()
+
+                        SettingsPill(
+                            text: settingsStore.settings.hud.enabled ? "HUD Enabled" : "HUD Hidden",
+                            tint: (settingsStore.settings.hud.enabled ? SettingsPalette.success : SettingsPalette.slate).opacity(0.22),
+                            foreground: SettingsPalette.ink
+                        )
+
+                        SettingsPill(
+                            text: settingsStore.settings.hud.showWhenAlreadyMatched ? "READY HUD On" : "READY HUD Off",
+                            tint: (settingsStore.settings.hud.showWhenAlreadyMatched ? SettingsPalette.accent : SettingsPalette.slate).opacity(0.18),
+                            foreground: SettingsPalette.ink
+                        )
+
+                        SettingsPill(
+                            text: settingsStore.settings.hud.showOnManualInputSourceChange ? "Manual HUD On" : "Manual HUD Off",
+                            tint: (settingsStore.settings.hud.showOnManualInputSourceChange ? SettingsPalette.accent : SettingsPalette.slate).opacity(0.18),
+                            foreground: SettingsPalette.ink
+                        )
+                    }
+                }
+
+                SettingsSectionCard(
                     title: "Appearance",
                     description: "HUD의 배경과 글자 투명도를 조절합니다.",
                     tint: SettingsPalette.accent
@@ -97,7 +158,7 @@ struct HUDTab: View {
                                 foreground: SettingsPalette.ink
                             )
                         }
-                        Slider(value: $settingsStore.settings.hud.backgroundOpacity, in: 0.3...1.0, step: 0.05)
+                        Slider(value: $settingsStore.settings.hud.backgroundOpacity, in: 0.0...1.0, step: 0.05)
                             .tint(SettingsPalette.accent)
                     }
 
@@ -114,7 +175,7 @@ struct HUDTab: View {
                                 foreground: SettingsPalette.ink
                             )
                         }
-                        Slider(value: $settingsStore.settings.hud.textOpacity, in: 0.3...1.0, step: 0.05)
+                        Slider(value: $settingsStore.settings.hud.textOpacity, in: 0.1...1.0, step: 0.05)
                             .tint(SettingsPalette.accent)
                     }
 
@@ -204,7 +265,7 @@ struct HUDTab: View {
                         Spacer()
                         Button("Reset Appearance to Default") {
                             withAnimation(.easeInOut(duration: 0.2)) {
-                                settingsStore.settings.hud.backgroundOpacity = 1.0
+                                settingsStore.settings.hud.backgroundOpacity = 0.3
                                 settingsStore.settings.hud.textOpacity = 1.0
                                 settingsStore.settings.hud.backgroundColor = nil
                                 settingsStore.settings.hud.mainTextColor = nil
@@ -214,67 +275,6 @@ struct HUDTab: View {
                             }
                         }
                         .buttonStyle(SettingsProminentButtonStyle(tint: SettingsPalette.slate))
-                    }
-                }
-
-                SettingsSectionCard(
-                    title: "Layout Customization",
-                    description: "프리뷰 안의 요소를 드래그해서 미리 지정된 슬롯 사이에서 위치를 바꿀 수 있습니다.",
-                    tint: SettingsPalette.warning
-                ) {
-                    HUDPreviewCanvas(
-                        layout: $settingsStore.settings.hud.layout,
-                        payload: previewPayload,
-                        backgroundOpacity: settingsStore.settings.hud.backgroundOpacity,
-                        textOpacity: settingsStore.settings.hud.textOpacity,
-                        backgroundColor: settingsStore.settings.hud.backgroundColor?.color,
-                        mainTextColor: settingsStore.settings.hud.mainTextColor?.color,
-                        identityTextColor: settingsStore.settings.hud.identityTextColor?.color,
-                        badgeTextColor: settingsStore.settings.hud.badgeTextColor?.color,
-                        detailTextColor: settingsStore.settings.hud.detailTextColor?.color
-                    )
-
-                    SettingsInfoCallout(
-                        title: "How It Works",
-                        message: "프리뷰 안의 요소를 드래그해서 원하는 위치 슬롯에 놓으면 스냅됩니다. 이미 점유된 슬롯에 놓으면 두 요소가 서로 위치를 교환합니다.",
-                        symbolName: "hand.draw.fill",
-                        tint: SettingsPalette.accent
-                    )
-
-                    VStack(spacing: 12) {
-                        ForEach(HUDAccessoryKind.allCases) { kind in
-                            HUDComponentControlRow(
-                                kind: kind,
-                                layout: $settingsStore.settings.hud.layout
-                            )
-                        }
-                    }
-
-                    HStack {
-                        Button("Preview HUD") {
-                            appEnvironment.previewHUD()
-                        }
-                        .buttonStyle(SettingsProminentButtonStyle(tint: SettingsPalette.accent))
-
-                        Spacer()
-
-                        SettingsPill(
-                            text: settingsStore.settings.hud.enabled ? "HUD Enabled" : "HUD Hidden",
-                            tint: (settingsStore.settings.hud.enabled ? SettingsPalette.success : SettingsPalette.slate).opacity(0.22),
-                            foreground: SettingsPalette.ink
-                        )
-
-                        SettingsPill(
-                            text: settingsStore.settings.hud.showWhenAlreadyMatched ? "READY HUD On" : "READY HUD Off",
-                            tint: (settingsStore.settings.hud.showWhenAlreadyMatched ? SettingsPalette.accent : SettingsPalette.slate).opacity(0.18),
-                            foreground: SettingsPalette.ink
-                        )
-
-                        SettingsPill(
-                            text: settingsStore.settings.hud.showOnManualInputSourceChange ? "Manual HUD On" : "Manual HUD Off",
-                            tint: (settingsStore.settings.hud.showOnManualInputSourceChange ? SettingsPalette.accent : SettingsPalette.slate).opacity(0.18),
-                            foreground: SettingsPalette.ink
-                        )
                     }
                 }
             }
