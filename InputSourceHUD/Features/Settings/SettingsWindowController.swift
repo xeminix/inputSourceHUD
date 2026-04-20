@@ -2,7 +2,7 @@ import AppKit
 import SwiftUI
 
 @MainActor
-final class SettingsWindowController: NSWindowController {
+final class SettingsWindowController: NSWindowController, NSWindowDelegate {
     nonisolated(unsafe) private var keyMonitor: Any?
 
     init(appEnvironment: AppEnvironment) {
@@ -31,6 +31,7 @@ final class SettingsWindowController: NSWindowController {
 
         super.init(window: window)
         shouldCascadeWindows = false
+        window.delegate = self
         installKeyboardScrollMonitor()
     }
 
@@ -123,8 +124,18 @@ final class SettingsWindowController: NSWindowController {
             return
         }
 
+        // Settings 창이 떠있는 동안만 regular 앱으로 승격 (Dock 아이콘 + Cmd+Tab 지원).
+        // 창이 닫히면 windowWillClose에서 accessory(메뉴바 전용)로 복귀.
+        NSApp.setActivationPolicy(.regular)
+
         showWindow(nil)
         window.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
+    }
+
+    nonisolated func windowWillClose(_ notification: Notification) {
+        DispatchQueue.main.async {
+            NSApp.setActivationPolicy(.accessory)
+        }
     }
 }
