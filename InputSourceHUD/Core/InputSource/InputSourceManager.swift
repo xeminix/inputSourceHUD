@@ -20,10 +20,24 @@ final class InputSourceManager {
     let isSimulatedImplementation = false
 
     func availableInputSources() -> [InputSource] {
-        let filter = [kTISPropertyInputSourceIsSelectCapable: kCFBooleanTrue] as CFDictionary
+        // Keyboard 카테고리만 필터 — PressAndHold, Character Palette(이모지) 등 제외
+        let filter = [
+            kTISPropertyInputSourceIsSelectCapable: kCFBooleanTrue,
+            kTISPropertyInputSourceCategory: kTISCategoryKeyboardInputSource as Any
+        ] as CFDictionary
         let sources = TISCreateInputSourceList(filter, false).takeRetainedValue() as NSArray
-        let inputSources = sources.compactMap { source in
-            makeInputSource(from: source as! TISInputSource)
+        let inputSources = sources.compactMap { source -> InputSource? in
+            let tisSource = source as! TISInputSource
+            // Keyboard layout 또는 Keyboard input mode만 허용 (input method / non-keyboard 제외)
+            guard let typeID = stringProperty(kTISPropertyInputSourceType, from: tisSource) else {
+                return nil
+            }
+            let isKeyboardLayout = typeID == (kTISTypeKeyboardLayout as String)
+            let isKeyboardInputMode = typeID == (kTISTypeKeyboardInputMode as String)
+            guard isKeyboardLayout || isKeyboardInputMode else {
+                return nil
+            }
+            return makeInputSource(from: tisSource)
         }
         let selectableInputSources = supportedSelectableInputSources(from: inputSources)
 
