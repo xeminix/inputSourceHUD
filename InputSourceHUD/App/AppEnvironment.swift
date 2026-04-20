@@ -3,6 +3,9 @@ import Combine
 import Foundation
 import ServiceManagement
 import UniformTypeIdentifiers
+#if canImport(Sparkle)
+import Sparkle
+#endif
 
 struct AppSelectionItem: Identifiable {
     let bundleID: String
@@ -17,12 +20,18 @@ struct AppSelectionItem: Identifiable {
 
 @MainActor
 final class AppEnvironment: ObservableObject {
+    private struct PendingPredictedManualChange {
+        let inputSourceID: String
+        let expiresAt: Date
+    }
+
     @Published private(set) var recentApplications: [AppSelectionItem] = []
     @Published private(set) var runningApplications: [AppSelectionItem] = []
 
     let settingsStore: SettingsStore
     let inputSourceManager: InputSourceManager
     let inputSourceChangeObserver: InputSourceChangeObserver
+    let inputSourceCyclePredictionMonitor: InputSourceCyclePredictionMonitor
     let secureInputDetector: SecureInputDetector
     let policyStore: PolicyStore
     let hudWindowController: HUDWindowController
@@ -30,14 +39,19 @@ final class AppEnvironment: ObservableObject {
     let appSwitchObserver: AppSwitchObserver
     let menuBarController: MenuBarController
     let launchAtLoginManager: LaunchAtLoginManager
+    let updateController: UpdateController
     lazy var settingsWindowController = SettingsWindowController(appEnvironment: self)
 
     private var cancellables = Set<AnyCancellable>()
+    private var pendingPredictedManualChange: PendingPredictedManualChange?
 
     init() {
         settingsStore = SettingsStore()
         inputSourceManager = InputSourceManager()
         inputSourceChangeObserver = InputSourceChangeObserver(inputSourceManager: inputSourceManager)
+        inputSourceCyclePredictionMonitor = InputSourceCyclePredictionMonitor(
+            inputSourceManager: inputSourceManager
+        )
         secureInputDetector = SecureInputDetector()
         policyStore = PolicyStore(settingsStore: settingsStore)
         hudWindowController = HUDWindowController(settingsStore: settingsStore)
@@ -51,6 +65,7 @@ final class AppEnvironment: ObservableObject {
         )
         appSwitchObserver = AppSwitchObserver()
         launchAtLoginManager = LaunchAtLoginManager()
+        updateController = UpdateController()
         menuBarController = MenuBarController(
             settingsStore: settingsStore,
             policyStore: policyStore,
@@ -65,8 +80,17 @@ final class AppEnvironment: ObservableObject {
         inputSourceChangeObserver.changeHandler = { [weak self] inputSource, isProgrammatic in
             self?.handleObservedInputSourceChange(inputSource, isProgrammatic: isProgrammatic)
         }
+        inputSourceCyclePredictionMonitor.predictionHandler = { [weak self] inputSource in
+            self?.handlePredictedInputSourceCycle(inputSource)
+        }
         menuBarController.openSettingsHandler = { [weak self] in
             self?.showSettingsWindow()
+        }
+        menuBarController.checkForUpdatesHandler = { [weak self] in
+            self?.updateController.checkForUpdates()
+        }
+        menuBarController.canCheckForUpdatesProvider = { [weak self] in
+            self?.updateController.canPresentCheckForUpdates ?? false
         }
         bindSettings()
     }
@@ -74,6 +98,8 @@ final class AppEnvironment: ObservableObject {
     func start() {
         normalizeSettings()
         inputSourceChangeObserver.start()
+        syncLiveInputSourceCyclePreview(promptIfNeeded: false)
+        updateController.startIfConfigured()
         menuBarController.install()
         appSwitchObserver.start()
         refreshApplicationCatalogs()
@@ -209,6 +235,34 @@ final class AppEnvironment: ObservableObject {
         }
     }
 
+    var liveInputSourceCyclePredictionStatus: InputSourceCyclePredictionStatus {
+        inputSourceCyclePredictionMonitor.status
+    }
+
+    var liveInputSourceCycleShortcuts: [InputSourceCycleShortcutDescriptor] {
+        inputSourceCyclePredictionMonitor.configuredShortcuts
+    }
+
+    var liveInputSourceCycleShortcutSummary: String {
+        inputSourceCyclePredictionMonitor.shortcutSummary()
+    }
+
+    func refreshLiveInputSourceCyclePreview(promptIfNeeded: Bool) {
+        syncLiveInputSourceCyclePreview(promptIfNeeded: promptIfNeeded)
+    }
+
+    func openAccessibilitySettings() {
+        guard
+            let url = URL(
+                string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility"
+            )
+        else {
+            return
+        }
+
+        NSWorkspace.shared.open(url)
+    }
+
     private func bindSettings() {
         settingsStore.$settings
             .map(\.global.launchAtLogin)
@@ -216,6 +270,15 @@ final class AppEnvironment: ObservableObject {
             .dropFirst()
             .sink { [weak self] isEnabled in
                 self?.applyLaunchAtLoginSetting(isEnabled)
+            }
+            .store(in: &cancellables)
+
+        settingsStore.$settings
+            .map(\.global.liveInputSourceCyclePreviewEnabled)
+            .removeDuplicates()
+            .dropFirst()
+            .sink { [weak self] _ in
+                self?.syncLiveInputSourceCyclePreview(promptIfNeeded: false)
             }
             .store(in: &cancellables)
     }
@@ -244,7 +307,16 @@ final class AppEnvironment: ObservableObject {
         _ inputSource: InputSource,
         isProgrammatic: Bool
     ) {
+        inputSourceCyclePredictionMonitor.resetCycleSession()
+
         guard !isProgrammatic else {
+            return
+        }
+
+        if consumePredictedManualChangeIfNeeded(matching: inputSource.id) {
+            Log.inputSource.debug(
+                "Suppressed duplicate committed input source change for predicted cycle \(inputSource.id, privacy: .public)"
+            )
             return
         }
 
@@ -255,6 +327,54 @@ final class AppEnvironment: ObservableObject {
             : frontmostApplication
 
         hudWindowController.showManualChange(app: hudApplication, inputSource: inputSource)
+    }
+
+    private func handlePredictedInputSourceCycle(_ inputSource: InputSource) {
+        pendingPredictedManualChange = PendingPredictedManualChange(
+            inputSourceID: inputSource.id,
+            expiresAt: Date().addingTimeInterval(4.0)
+        )
+
+        let frontmostApplication = NSWorkspace.shared.frontmostApplication
+        let hudApplication =
+            frontmostApplication?.bundleIdentifier == Bundle.main.bundleIdentifier
+            ? nil
+            : frontmostApplication
+
+        Log.inputSource.debug(
+            "Predicted input source cycle to \(inputSource.id, privacy: .public)"
+        )
+        hudWindowController.showManualChange(app: hudApplication, inputSource: inputSource)
+    }
+
+    private func consumePredictedManualChangeIfNeeded(matching inputSourceID: String) -> Bool {
+        guard let pendingPredictedManualChange else {
+            return false
+        }
+
+        if pendingPredictedManualChange.expiresAt < Date() {
+            self.pendingPredictedManualChange = nil
+            return false
+        }
+
+        guard pendingPredictedManualChange.inputSourceID == inputSourceID else {
+            self.pendingPredictedManualChange = nil
+            return false
+        }
+
+        self.pendingPredictedManualChange = nil
+        return true
+    }
+
+    private func syncLiveInputSourceCyclePreview(promptIfNeeded: Bool) {
+        if !settingsStore.settings.global.liveInputSourceCyclePreviewEnabled {
+            pendingPredictedManualChange = nil
+        }
+
+        inputSourceCyclePredictionMonitor.configure(
+            isEnabled: settingsStore.settings.global.liveInputSourceCyclePreviewEnabled,
+            promptIfNeeded: promptIfNeeded
+        )
     }
 
     private func recordObservedApplication(_ application: NSRunningApplication) {
@@ -375,3 +495,195 @@ final class AppEnvironment: ObservableObject {
         }
     }
 }
+
+@MainActor
+final class UpdateController: NSObject, ObservableObject {
+    @Published private(set) var isConfigured = false
+    @Published private(set) var canCheckForUpdates = false
+    @Published private(set) var configurationStatusText = "Not Configured"
+    @Published private(set) var configurationHintText =
+        "Set SPARKLE_APPCAST_URL and SPARKLE_PUBLIC_ED_KEY before release."
+    @Published private(set) var lastUpdateEventText = "Idle"
+
+    private let bundle: Bundle
+
+#if canImport(Sparkle)
+    private lazy var updaterController = SPUStandardUpdaterController(
+        startingUpdater: false,
+        updaterDelegate: self,
+        userDriverDelegate: nil
+    )
+    private lazy var updaterSettings = SPUUpdaterSettings(hostBundle: bundle)
+    private var cancellables = Set<AnyCancellable>()
+    private var hasStartedUpdater = false
+#endif
+
+    init(bundle: Bundle = .main) {
+        self.bundle = bundle
+        super.init()
+
+        refreshConfigurationState()
+
+#if canImport(Sparkle)
+        updaterController.updater.publisher(for: \.canCheckForUpdates)
+            .receive(on: RunLoop.main)
+            .sink { [weak self] canCheckForUpdates in
+                self?.canCheckForUpdates = canCheckForUpdates
+            }
+            .store(in: &cancellables)
+#endif
+    }
+
+    var feedURLDisplayText: String {
+        nonEmptyInfoValue(forKey: "SUFeedURL") ?? "Not configured"
+    }
+
+    var automaticallyChecksForUpdates: Bool {
+#if canImport(Sparkle)
+        updaterSettings.automaticallyChecksForUpdates
+#else
+        false
+#endif
+    }
+
+    var automaticallyDownloadsUpdates: Bool {
+#if canImport(Sparkle)
+        updaterSettings.automaticallyDownloadsUpdates
+#else
+        false
+#endif
+    }
+
+    var canPresentCheckForUpdates: Bool {
+        isConfigured && canCheckForUpdates
+    }
+
+    func startIfConfigured() {
+        refreshConfigurationState()
+
+#if canImport(Sparkle)
+        guard isConfigured, !hasStartedUpdater else {
+            return
+        }
+
+        updaterController.startUpdater()
+        hasStartedUpdater = true
+#endif
+    }
+
+    func checkForUpdates() {
+#if canImport(Sparkle)
+        startIfConfigured()
+        guard isConfigured else {
+            return
+        }
+
+        lastUpdateEventText = "Checking for updates…"
+        updaterController.checkForUpdates(nil)
+#endif
+    }
+
+    func checkForUpdatesInBackground() {
+#if canImport(Sparkle)
+        startIfConfigured()
+        guard isConfigured else {
+            return
+        }
+
+        lastUpdateEventText = "Checking in background…"
+        updaterController.updater.checkForUpdatesInBackground()
+#endif
+    }
+
+    func setAutomaticallyChecksForUpdates(_ enabled: Bool) {
+#if canImport(Sparkle)
+        updaterSettings.automaticallyChecksForUpdates = enabled
+        objectWillChange.send()
+#endif
+    }
+
+    func setAutomaticallyDownloadsUpdates(_ enabled: Bool) {
+#if canImport(Sparkle)
+        updaterSettings.automaticallyDownloadsUpdates = enabled
+        objectWillChange.send()
+#endif
+    }
+
+    private func refreshConfigurationState() {
+        let feedURL = nonEmptyInfoValue(forKey: "SUFeedURL")
+        let publicKey = nonEmptyInfoValue(forKey: "SUPublicEDKey")
+
+        if feedURL == nil && publicKey == nil {
+            isConfigured = false
+            configurationStatusText = "Feed URL + EdDSA Key Missing"
+            configurationHintText =
+                "Set SPARKLE_APPCAST_URL and SPARKLE_PUBLIC_ED_KEY before shipping your first Sparkle-enabled DMG."
+        } else if feedURL == nil {
+            isConfigured = false
+            configurationStatusText = "Feed URL Missing"
+            configurationHintText =
+                "Point SPARKLE_APPCAST_URL at your hosted appcast.xml before release."
+        } else if publicKey == nil {
+            isConfigured = false
+            configurationStatusText = "EdDSA Key Missing"
+            configurationHintText =
+                "Generate Sparkle keys and assign the public key to SPARKLE_PUBLIC_ED_KEY before release."
+        } else {
+            isConfigured = true
+            configurationStatusText = "Configured"
+            configurationHintText =
+                "Sparkle is ready to check a hosted appcast and can reuse your notarized DMG or zip archives."
+        }
+    }
+
+    private func nonEmptyInfoValue(forKey key: String) -> String? {
+        guard let rawValue = bundle.object(forInfoDictionaryKey: key) as? String else {
+            return nil
+        }
+
+        let trimmedValue = rawValue.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmedValue.isEmpty ? nil : trimmedValue
+    }
+}
+
+#if canImport(Sparkle)
+extension UpdateController: SPUUpdaterDelegate {
+    func updater(_ updater: SPUUpdater, didFinishLoading appcast: SUAppcast) {
+        lastUpdateEventText = "Appcast loaded"
+        Log.app.info("Sparkle loaded appcast with \(appcast.items.count) items")
+    }
+
+    func updater(_ updater: SPUUpdater, didFindValidUpdate item: SUAppcastItem) {
+        lastUpdateEventText = "Update found: \(item.displayVersionString)"
+        Log.app.notice(
+            "Sparkle found update \(item.versionString, privacy: .public) (\(item.displayVersionString, privacy: .public))"
+        )
+    }
+
+    func updater(_ updater: SPUUpdater, willInstallUpdate item: SUAppcastItem) {
+        lastUpdateEventText = "Installing update \(item.displayVersionString)"
+        Log.app.notice(
+            "Sparkle will install update \(item.versionString, privacy: .public)"
+        )
+    }
+
+    func updater(_ updater: SPUUpdater, didAbortWithError error: Error) {
+        lastUpdateEventText = "Update aborted"
+        Log.app.error("Sparkle aborted update cycle: \(error.localizedDescription, privacy: .public)")
+    }
+
+    func updater(
+        _ updater: SPUUpdater,
+        didFinishUpdateCycleFor updateCheck: SPUUpdateCheck,
+        error: Error?
+    ) {
+        if let error {
+            lastUpdateEventText = "Update cycle failed"
+            Log.app.error("Sparkle finished update cycle with error: \(error.localizedDescription, privacy: .public)")
+        } else {
+            lastUpdateEventText = "Update cycle finished"
+            Log.app.info("Sparkle finished update cycle")
+        }
+    }
+}
+#endif

@@ -13,6 +13,8 @@ final class MenuBarController: NSObject, NSMenuDelegate {
     private var cancellables = Set<AnyCancellable>()
     private var statusItem: NSStatusItem?
     var openSettingsHandler: (() -> Void)?
+    var checkForUpdatesHandler: (() -> Void)?
+    var canCheckForUpdatesProvider: (() -> Bool)?
 
     init(
         settingsStore: SettingsStore,
@@ -43,6 +45,7 @@ final class MenuBarController: NSObject, NSMenuDelegate {
     }
 
     func menuNeedsUpdate(_ menu: NSMenu) {
+        updateCheckForUpdatesItem(in: menu)
         updateAddRuleItem(in: menu)
     }
 
@@ -81,8 +84,17 @@ final class MenuBarController: NSObject, NSMenuDelegate {
         settingsItem.target = self
         menu.addItem(settingsItem)
 
+        let updatesItem = NSMenuItem(
+            title: "Check for Updates…",
+            action: #selector(checkForUpdates),
+            keyEquivalent: ""
+        )
+        updatesItem.target = self
+        updatesItem.tag = 101
+        menu.addItem(updatesItem)
+
         let addRuleItem = NSMenuItem(title: "Add Rule for Current App", action: nil, keyEquivalent: "")
-        addRuleItem.tag = 100
+        addRuleItem.tag = 102
         menu.addItem(addRuleItem)
 
         menu.addItem(.separator())
@@ -101,7 +113,7 @@ final class MenuBarController: NSObject, NSMenuDelegate {
     }
 
     private func updateAddRuleItem(in menu: NSMenu) {
-        guard let addRuleItem = menu.item(withTag: 100) else {
+        guard let addRuleItem = menu.item(withTag: 102) else {
             return
         }
 
@@ -163,6 +175,14 @@ final class MenuBarController: NSObject, NSMenuDelegate {
         addRuleItem.submenu = submenu
     }
 
+    private func updateCheckForUpdatesItem(in menu: NSMenu) {
+        guard let updatesItem = menu.item(withTag: 101) else {
+            return
+        }
+
+        updatesItem.isEnabled = canCheckForUpdatesProvider?() ?? false
+    }
+
     private func updateStatusItemTitle() {
         statusItem?.button?.title = iconRenderer.title(
             for: inputSourceChangeObserver.currentInputSource
@@ -185,6 +205,11 @@ final class MenuBarController: NSObject, NSMenuDelegate {
     @objc
     private func openSettings() {
         openSettingsHandler?()
+    }
+
+    @objc
+    private func checkForUpdates() {
+        checkForUpdatesHandler?()
     }
 
     @objc

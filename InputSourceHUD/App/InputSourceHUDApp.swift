@@ -21,12 +21,22 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         environment.start()
 
-#if DEBUG
         if ProcessInfo.processInfo.arguments.contains("--open-settings-on-launch") {
             DispatchQueue.main.async {
                 self.environment.showSettingsWindow()
             }
         }
-#endif
+
+        if ProcessInfo.processInfo.arguments.contains("--check-for-updates-on-launch") {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                self.environment.updateController.checkForUpdates()
+            }
+        }
+
+        if ProcessInfo.processInfo.arguments.contains("--check-for-updates-in-background-on-launch") {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                self.environment.updateController.checkForUpdatesInBackground()
+            }
+        }
     }
 }

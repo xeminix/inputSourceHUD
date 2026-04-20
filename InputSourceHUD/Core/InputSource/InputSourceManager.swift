@@ -81,8 +81,18 @@ final class InputSourceManager {
     }
 
     private func supportedSelectableInputSources(from sources: [InputSource]) -> [InputSource] {
+        // 시스템에 활성화된 모든 선택 가능 입력기를 노출.
+        // ABC / 두벌식을 앞에 두고, 나머지는 localizedName 순 정렬.
+        let preferredIDs: [String] = [preferredEnglishInputSourceID, preferredKoreanInputSourceID]
         let sourcesByID = Dictionary(uniqueKeysWithValues: sources.map { ($0.id, $0) })
-        return [preferredEnglishInputSourceID, preferredKoreanInputSourceID].compactMap { sourcesByID[$0] }
+
+        var ordered: [InputSource] = preferredIDs.compactMap { sourcesByID[$0] }
+        let preferredIDSet = Set(preferredIDs)
+        let remaining = sources
+            .filter { !preferredIDSet.contains($0.id) }
+            .sorted { $0.localizedName.localizedCaseInsensitiveCompare($1.localizedName) == .orderedAscending }
+        ordered.append(contentsOf: remaining)
+        return ordered
     }
 
     private func stringProperty(_ key: CFString, from source: TISInputSource) -> String? {
