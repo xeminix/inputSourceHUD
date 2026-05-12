@@ -11,16 +11,32 @@ final class HUDWindowController {
         let state: HUDState
     }
 
+    private static let placeholderPayload = HUDPayload(
+        icon: nil,
+        appName: "",
+        languageName: "",
+        detailName: "",
+        message: "",
+        state: .success
+    )
+
     private let settingsStore: SettingsStore
 
     private var hideWorkItem: DispatchWorkItem?
     private var window: HUDWindow?
+    private var hostingView: NSHostingView<HUDContentView>?
     private var lastPresentationSignature: PresentationSignature?
     private var lastPresentationDate = Date.distantPast
     private var presentationRevision = 0
 
     init(settingsStore: SettingsStore) {
         self.settingsStore = settingsStore
+    }
+
+    /// 앱 시작 시 한 번 호출 — HUD 윈도우/호스팅 뷰를 미리 만들어 첫 표시 비용을 없앤다.
+    /// 입력소스가 처음 바뀔 때 NSPanel 생성 + SwiftUI 첫 렌더가 한꺼번에 도는 걸 막는다.
+    func prewarm() {
+        _ = ensureWindow()
     }
 
     func showSuccess(app: NSRunningApplication, inputSource: InputSource) {
@@ -68,7 +84,12 @@ final class HUDWindowController {
         Log.inputSource.info(
             "Observed manual input source change to \(inputSource.id, privacy: .public)"
         )
-        show(payload: payload, preferredApplication: app, ignoreHUDEnabled: false)
+        // 입력소스 전환을 알리는 distributed notification 핸들러와 같은 런루프 틱에서
+        // 윈도우 생성/표시 같은 무거운 작업을 하면 직후 키 입력 타이밍과 겹칠 수 있어
+        // 한 틱 뒤로 미룬다.
+        DispatchQueue.main.async { [weak self] in
+            self?.show(payload: payload, preferredApplication: app, ignoreHUDEnabled: false)
+        }
     }
 
     func showBlocked(app: NSRunningApplication, targetInputSource: InputSource) {
@@ -126,44 +147,33 @@ final class HUDWindowController {
         presentationRevision += 1
         let revision = presentationRevision
 
+        hideWorkItem?.cancel()
+
         let size = HUDCanvasMetrics.size
         let screen = ScreenLocator.preferredScreen(for: preferredApplication) ?? NSScreen.main
         let frame = frameForDisplay(on: screen, size: size)
-        let (panel, shouldAnimateEntrance) = preparedWindow(frame: frame)
+        let (panel, hosting) = ensureWindow()
+        let wasVisible = panel.isVisible
 
-        panel.contentView = NSHostingView(
-            rootView: HUDContentView(
-                payload: payload,
-                layout: settingsStore.settings.hud.layout,
-                backgroundOpacity: settingsStore.settings.hud.backgroundOpacity,
-                textOpacity: settingsStore.settings.hud.textOpacity,
-                backgroundColor: settingsStore.settings.hud.backgroundColor?.color,
-                mainTextColor: settingsStore.settings.hud.mainTextColor?.color,
-                identityTextColor: settingsStore.settings.hud.identityTextColor?.color,
-                badgeTextColor: settingsStore.settings.hud.badgeTextColor?.color,
-                detailTextColor: settingsStore.settings.hud.detailTextColor?.color
-            )
-        )
+        hosting.rootView = makeContentView(payload: payload)
         panel.setFrame(frame, display: true)
-        panel.orderFrontRegardless()
 
-        Log.hud.info(
-            "Showing HUD for \(payload.appName, privacy: .public) on \(screen?.localizedName ?? "unknown screen", privacy: .public) at \(NSStringFromRect(frame), privacy: .public)"
-        )
-
-        if shouldAnimateEntrance {
+        if wasVisible {
+            // 이미 떠 있으면(또는 페이드아웃 진행 중이면) 즉시 불투명하게 끊고 새 내용 표시.
+            panel.alphaValue = 1
+            panel.orderFrontRegardless()
+        } else {
             panel.alphaValue = 0
-
+            panel.orderFrontRegardless()
             NSAnimationContext.runAnimationGroup { context in
                 context.duration = 0.12
                 panel.animator().alphaValue = 1
             }
-        } else {
-            NSAnimationContext.runAnimationGroup { context in
-                context.duration = 0.08
-                panel.animator().alphaValue = 1
-            }
         }
+
+        Log.hud.info(
+            "Showing HUD for \(payload.appName, privacy: .public) on \(screen?.localizedName ?? "unknown screen", privacy: .public) at \(NSStringFromRect(frame), privacy: .public)"
+        )
 
         scheduleHide(after: settingsStore.settings.hud.durationSeconds, revision: revision)
     }
@@ -180,7 +190,7 @@ final class HUDWindowController {
     }
 
     private func hideWindow(revision: Int) {
-        guard revision == presentationRevision, let window else {
+        guard revision == presentationRevision, let window, window.isVisible else {
             return
         }
 
@@ -192,28 +202,40 @@ final class HUDWindowController {
                 guard revision == self.presentationRevision else {
                     return
                 }
+                // 윈도우는 닫지 않고 화면에서만 내린다 — 재사용해서 다음 표시 비용/깜빡임을 없앤다.
                 window.orderOut(nil)
-                window.close()
-                self.window = nil
             }
         }
     }
 
-    private func preparedWindow(frame: CGRect) -> (HUDWindow, Bool) {
-        hideWorkItem?.cancel()
-
-        if let existingWindow = window, existingWindow.isVisible {
-            return (existingWindow, false)
+    private func ensureWindow() -> (HUDWindow, NSHostingView<HUDContentView>) {
+        if let window, let hostingView {
+            return (window, hostingView)
         }
 
-        if let existingWindow = window {
-            existingWindow.orderOut(nil)
-            existingWindow.close()
-        }
-
+        let frame = frameForDisplay(on: NSScreen.main, size: HUDCanvasMetrics.size)
         let panel = HUDWindow(contentRect: frame)
+        let hosting = NSHostingView(rootView: makeContentView(payload: Self.placeholderPayload))
+        panel.contentView = hosting
+        panel.alphaValue = 0
+
         window = panel
-        return (panel, true)
+        hostingView = hosting
+        return (panel, hosting)
+    }
+
+    private func makeContentView(payload: HUDPayload) -> HUDContentView {
+        HUDContentView(
+            payload: payload,
+            layout: settingsStore.settings.hud.layout,
+            backgroundOpacity: settingsStore.settings.hud.backgroundOpacity,
+            textOpacity: settingsStore.settings.hud.textOpacity,
+            backgroundColor: settingsStore.settings.hud.backgroundColor?.color,
+            mainTextColor: settingsStore.settings.hud.mainTextColor?.color,
+            identityTextColor: settingsStore.settings.hud.identityTextColor?.color,
+            badgeTextColor: settingsStore.settings.hud.badgeTextColor?.color,
+            detailTextColor: settingsStore.settings.hud.detailTextColor?.color
+        )
     }
 
     private func frameForDisplay(on screen: NSScreen?, size: CGSize) -> CGRect {

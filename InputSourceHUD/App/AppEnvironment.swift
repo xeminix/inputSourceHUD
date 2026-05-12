@@ -104,6 +104,7 @@ final class AppEnvironment: ObservableObject {
         appSwitchObserver.start()
         refreshApplicationCatalogs()
         synchronizeLaunchAtLoginSetting()
+        hudWindowController.prewarm()
         Log.app.info("App environment started")
     }
 
