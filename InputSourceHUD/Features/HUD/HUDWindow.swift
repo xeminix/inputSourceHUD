@@ -13,6 +13,8 @@ final class HUDWindow: NSPanel {
         backgroundColor = .clear
         collectionBehavior = [.fullScreenAuxiliary, .ignoresCycle, .canJoinAllSpaces]
         hasShadow = true
+        // 정보 표시 전용 오버레이 — 마우스 클릭/스크롤/드래그를 가로채지 않고 뒤 창으로 통과시킨다.
+        ignoresMouseEvents = true
         isFloatingPanel = true
         isMovableByWindowBackground = false
         isOpaque = false
