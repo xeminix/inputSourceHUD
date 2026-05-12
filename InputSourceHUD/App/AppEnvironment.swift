@@ -1,4 +1,5 @@
 import AppKit
+import ApplicationServices
 import Combine
 import Foundation
 import ServiceManagement
@@ -321,13 +322,60 @@ final class AppEnvironment: ObservableObject {
             return
         }
 
-        let frontmostApplication = NSWorkspace.shared.frontmostApplication
+        // AX focused app catches nonactivating panel apps (Raycast, Spotlight,
+        // Alfred) that don't appear in frontmostApplication / menuBarOwning.
+        let workspace = NSWorkspace.shared
+        let activeApplication =
+            axFocusedApplication() ??
+            workspace.menuBarOwningApplication ??
+            workspace.frontmostApplication
         let hudApplication =
-            frontmostApplication?.bundleIdentifier == Bundle.main.bundleIdentifier
+            activeApplication?.bundleIdentifier == Bundle.main.bundleIdentifier
             ? nil
-            : frontmostApplication
+            : activeApplication
+
+        // force 정책 앱이면 재강제 시도 — 성공 시 manual change HUD는 표시하지 않음
+        if let targetApp = hudApplication {
+            Log.inputSource.debug(
+                "Unexpected non-programmatic input source change to \(inputSource.id, privacy: .public) while \(targetApp.bundleIdentifier ?? "unknown", privacy: .public) is frontmost; checking force policy"
+            )
+
+            if appSwitchCoordinator.enforceActivePolicyIfNeeded(
+                for: targetApp,
+                currentInputSource: inputSource
+            ) {
+                return
+            }
+        }
 
         hudWindowController.showManualChange(app: hudApplication, inputSource: inputSource)
+    }
+
+    private func axFocusedApplication() -> NSRunningApplication? {
+        guard AXIsProcessTrusted() else {
+            return nil
+        }
+
+        let systemWide = AXUIElementCreateSystemWide()
+        // Cap the IPC wait so a hung/busy target app can't stall the main thread.
+        AXUIElementSetMessagingTimeout(systemWide, 0.1)
+        var focusedAppRef: CFTypeRef?
+        let result = AXUIElementCopyAttributeValue(
+            systemWide,
+            kAXFocusedApplicationAttribute as CFString,
+            &focusedAppRef
+        )
+
+        guard result == .success, let appElement = focusedAppRef else {
+            return nil
+        }
+
+        var pid: pid_t = 0
+        guard AXUIElementGetPid(appElement as! AXUIElement, &pid) == .success else {
+            return nil
+        }
+
+        return NSRunningApplication(processIdentifier: pid)
     }
 
     private func handlePredictedInputSourceCycle(_ inputSource: InputSource) {

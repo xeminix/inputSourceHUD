@@ -12,6 +12,23 @@ final class AppSwitchCoordinator: AppSwitchHandling {
 
     private var pendingWorkItem: DispatchWorkItem?
 
+    // 무한루프 방지: 재강제 시도 횟수 추적
+    private struct ReEnforceAttempt {
+        let bundleID: String
+        let targetInputSourceID: String
+        var count: Int
+        let windowStart: Date
+    }
+
+    private static let reEnforceMaxAttempts = 3
+    private static let reEnforceWindowSeconds: TimeInterval = 2.0
+    // Per-app cooldown to suppress rapid enforce ping-pong (e.g. Safari tab
+    // switches where macOS briefly flips the input source and reverts it).
+    private static let reEnforceCooldownSeconds: TimeInterval = 2.5
+
+    private var reEnforceAttempt: ReEnforceAttempt?
+    private var lastEnforceTimeByBundle: [String: Date] = [:]
+
     init(
         settingsStore: SettingsStore,
         policyStore: PolicyStore,
@@ -130,5 +147,119 @@ final class AppSwitchCoordinator: AppSwitchHandling {
         return inputSourceManager.availableInputSources().first {
             $0.id == defaultInputSourceID
         }
+    }
+
+    /// 비프로그래밍적 입력소스 변경이 감지됐을 때, force 정책 앱이면 목표 입력소스로 다시 강제한다.
+    /// - Returns: 재강제를 시도했으면 true, skip됐으면 false
+    @discardableResult
+    func enforceActivePolicyIfNeeded(
+        for application: NSRunningApplication,
+        currentInputSource: InputSource
+    ) -> Bool {
+        guard settingsStore.settings.global.enabled else {
+            Log.app.debug("enforceActivePolicyIfNeeded: switching is disabled, skip")
+            return false
+        }
+
+        guard let bundleID = application.bundleIdentifier else {
+            Log.app.error("enforceActivePolicyIfNeeded: app missing bundle identifier")
+            return false
+        }
+
+        // force 정책인 경우에만 재강제
+        guard
+            let rule = policyStore.rule(for: bundleID),
+            rule.policy == .force,
+            let targetInputSourceID = rule.inputSourceId
+        else {
+            Log.app.debug(
+                "enforceActivePolicyIfNeeded: no force policy for \(bundleID, privacy: .public), skip"
+            )
+            return false
+        }
+
+        // 이미 목표 입력소스면 재강제 불필요
+        guard currentInputSource.id != targetInputSourceID else {
+            Log.app.debug(
+                "enforceActivePolicyIfNeeded: already on target \(targetInputSourceID, privacy: .public) for \(bundleID, privacy: .public), skip"
+            )
+            return false
+        }
+
+        let now = Date()
+
+        // Cooldown: 직전 재강제 후 짧은 시간 안의 반복 트리거는 무시 (Safari 탭 전환 핑퐁 억제)
+        if let lastEnforce = lastEnforceTimeByBundle[bundleID],
+           now.timeIntervalSince(lastEnforce) < Self.reEnforceCooldownSeconds
+        {
+            Log.app.debug(
+                "enforceActivePolicyIfNeeded: within cooldown for \(bundleID, privacy: .public), skip"
+            )
+            return false
+        }
+
+        // 무한루프 방지: 같은 앱+목표 조합으로 시간 창 내 최대 횟수 초과 시 중단
+        if var attempt = reEnforceAttempt,
+           attempt.bundleID == bundleID,
+           attempt.targetInputSourceID == targetInputSourceID,
+           now.timeIntervalSince(attempt.windowStart) <= Self.reEnforceWindowSeconds
+        {
+            attempt.count += 1
+            reEnforceAttempt = attempt
+
+            if attempt.count > Self.reEnforceMaxAttempts {
+                Log.app.warning(
+                    "enforceActivePolicyIfNeeded: max re-enforce attempts (\(Self.reEnforceMaxAttempts)) reached for \(bundleID, privacy: .public), aborting to prevent loop"
+                )
+                return false
+            }
+        } else {
+            // 새 시간 창 시작
+            reEnforceAttempt = ReEnforceAttempt(
+                bundleID: bundleID,
+                targetInputSourceID: targetInputSourceID,
+                count: 1,
+                windowStart: now
+            )
+        }
+
+        guard inputSourceManager.availableInputSources().contains(where: { $0.id == targetInputSourceID }) else {
+            Log.app.error(
+                "enforceActivePolicyIfNeeded: target input source \(targetInputSourceID, privacy: .public) not found for \(bundleID, privacy: .public)"
+            )
+            return false
+        }
+
+        if secureInputDetector.isEnabled() {
+            Log.app.notice(
+                "enforceActivePolicyIfNeeded: Secure Input active, cannot re-enforce for \(bundleID, privacy: .public)"
+            )
+            return false
+        }
+
+        let attemptNumber = reEnforceAttempt?.count ?? 1
+        Log.app.info(
+            "enforceActivePolicyIfNeeded: re-enforcing \(bundleID, privacy: .public) → \(targetInputSourceID, privacy: .public) (attempt \(attemptNumber)/\(Self.reEnforceMaxAttempts))"
+        )
+
+        inputSourceChangeObserver.markExpectedProgrammaticChange(to: targetInputSourceID)
+
+        if inputSourceManager.switchToInputSource(id: targetInputSourceID) {
+            inputSourceChangeObserver.refresh()
+            lastEnforceTimeByBundle[bundleID] = Date()
+            // No HUD here — this is a silent background correction, not a
+            // user-initiated switch. Showing a HUD every time would flicker
+            // (see Safari tab-switch ping-pong).
+            Log.app.info(
+                "enforceActivePolicyIfNeeded: succeeded for \(bundleID, privacy: .public)"
+            )
+            return true
+        }
+
+        inputSourceChangeObserver.clearExpectedProgrammaticChange()
+        Log.inputSource.error(
+            "enforceActivePolicyIfNeeded: failed to switch for \(bundleID, privacy: .public)"
+        )
+        return false
     }
 }

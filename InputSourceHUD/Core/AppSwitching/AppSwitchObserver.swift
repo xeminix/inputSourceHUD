@@ -1,4 +1,5 @@
 @preconcurrency import AppKit
+import ApplicationServices
 import Foundation
 
 @MainActor
@@ -75,11 +76,49 @@ final class AppSwitchObserver: NSObject {
     }
 
     private func pollFrontmostApplication(reason: String) {
-        guard let application = NSWorkspace.shared.frontmostApplication else {
+        // Resolution order: AX focused → menuBar owner → NSWorkspace frontmost.
+        // Nonactivating panel apps (Raycast/Spotlight/Alfred) don't change
+        // frontmostApplication or menuBarOwningApplication, but they *do*
+        // become the system-wide AX-focused app when they receive keyboard
+        // input. Falls back gracefully if Accessibility permission is missing.
+        let workspace = NSWorkspace.shared
+        let application =
+            axFocusedApplication() ??
+            workspace.menuBarOwningApplication ??
+            workspace.frontmostApplication
+
+        guard let application else {
             return
         }
 
         deliverIfNeeded(application, reason: reason)
+    }
+
+    private func axFocusedApplication() -> NSRunningApplication? {
+        guard AXIsProcessTrusted() else {
+            return nil
+        }
+
+        let systemWide = AXUIElementCreateSystemWide()
+        // Cap the IPC wait so a hung/busy target app can't stall the main thread.
+        AXUIElementSetMessagingTimeout(systemWide, 0.1)
+        var focusedAppRef: CFTypeRef?
+        let result = AXUIElementCopyAttributeValue(
+            systemWide,
+            kAXFocusedApplicationAttribute as CFString,
+            &focusedAppRef
+        )
+
+        guard result == .success, let appElement = focusedAppRef else {
+            return nil
+        }
+
+        var pid: pid_t = 0
+        guard AXUIElementGetPid(appElement as! AXUIElement, &pid) == .success else {
+            return nil
+        }
+
+        return NSRunningApplication(processIdentifier: pid)
     }
 
     private func deliverIfNeeded(_ application: NSRunningApplication, reason: String) {
