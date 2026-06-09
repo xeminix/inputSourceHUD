@@ -108,10 +108,14 @@ struct AppsTab: View {
                                 AppSelectionCard(
                                     item: item,
                                     availableInputSources: availableInputSources,
-                                    currentRule: appEnvironment.rule(for: item.bundleID)
-                                ) { selectedInputSource in
-                                    appEnvironment.toggleRule(for: item, inputSourceID: selectedInputSource.id)
-                                }
+                                    currentRule: appEnvironment.rule(for: item.bundleID),
+                                    onSelectInputSource: { selectedInputSource in
+                                        appEnvironment.toggleRule(for: item, inputSourceID: selectedInputSource.id)
+                                    },
+                                    onToggleIgnore: {
+                                        appEnvironment.toggleIgnoreRule(for: item)
+                                    }
+                                )
                             }
                         }
                     }
@@ -135,10 +139,14 @@ struct AppsTab: View {
                                 AppSelectionCard(
                                     item: item,
                                     availableInputSources: availableInputSources,
-                                    currentRule: appEnvironment.rule(for: item.bundleID)
-                                ) { selectedInputSource in
-                                    appEnvironment.toggleRule(for: item, inputSourceID: selectedInputSource.id)
-                                }
+                                    currentRule: appEnvironment.rule(for: item.bundleID),
+                                    onSelectInputSource: { selectedInputSource in
+                                        appEnvironment.toggleRule(for: item, inputSourceID: selectedInputSource.id)
+                                    },
+                                    onToggleIgnore: {
+                                        appEnvironment.toggleIgnoreRule(for: item)
+                                    }
+                                )
                             }
                         }
                     }
@@ -187,6 +195,7 @@ private struct AppSelectionCard: View {
     let availableInputSources: [InputSource]
     let currentRule: AppRule?
     let onSelectInputSource: (InputSource) -> Void
+    let onToggleIgnore: () -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -245,6 +254,16 @@ private struct AppSelectionCard: View {
                             )
                         )
                     }
+
+                    Button("Ignore") {
+                        onToggleIgnore()
+                    }
+                    .buttonStyle(
+                        AppSelectionSourceButtonStyle(
+                            tint: ignoreButtonTint(),
+                            foreground: ignoreButtonForeground()
+                        )
+                    )
                 }
             }
         }
@@ -344,6 +363,20 @@ private struct AppSelectionCard: View {
             return .white
         }
 
+        return SettingsPalette.ink
+    }
+
+    private func ignoreButtonTint() -> Color {
+        if currentRule?.policy == .ignore {
+            return SettingsPalette.steel
+        }
+        return SettingsPalette.steel.opacity(0.18)
+    }
+
+    private func ignoreButtonForeground() -> Color {
+        if currentRule?.policy == .ignore {
+            return .white
+        }
         return SettingsPalette.ink
     }
 }

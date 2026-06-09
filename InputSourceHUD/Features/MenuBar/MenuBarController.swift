@@ -161,6 +161,18 @@ final class MenuBarController: NSObject, NSMenuDelegate {
         }
         submenu.addItem(defaultItem)
 
+        let ignoreItem = NSMenuItem(
+            title: "Ignore",
+            action: #selector(setRuleToIgnore(_:)),
+            keyEquivalent: ""
+        )
+        ignoreItem.target = self
+        ignoreItem.representedObject = app
+        if existingRule?.policy == .ignore {
+            ignoreItem.state = .on
+        }
+        submenu.addItem(ignoreItem)
+
         if existingRule != nil {
             let removeItem = NSMenuItem(
                 title: "Remove Rule",
@@ -241,6 +253,25 @@ final class MenuBarController: NSObject, NSMenuDelegate {
             inputSourceId: nil
         )
         policyStore.upsert(rule: rule)
+    }
+
+    @objc
+    private func setRuleToIgnore(_ sender: NSMenuItem) {
+        guard let app = sender.representedObject as? NSRunningApplication,
+              let bundleID = app.bundleIdentifier
+        else {
+            return
+        }
+        // 일관성: AppsTab의 toggleIgnoreRule과 같은 토글 동작 — 이미 ignore면 rule 제거,
+        // 아니면 ignore로 upsert. 체크표시(.on)를 누르면 꺼지는 자연스러운 UX.
+        if policyStore.rule(for: bundleID)?.policy == .ignore {
+            policyStore.removeRule(for: bundleID)
+        } else {
+            policyStore.upsertIgnoreRule(
+                bundleID: bundleID,
+                displayName: app.localizedName ?? bundleID
+            )
+        }
     }
 
     @objc

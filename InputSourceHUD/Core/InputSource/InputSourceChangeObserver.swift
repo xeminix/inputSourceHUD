@@ -19,6 +19,10 @@ final class InputSourceChangeObserver: NSObject, ObservableObject {
     private let distributedNotificationCenter = DistributedNotificationCenter.default()
     private var isStarted = false
     private var pendingProgrammaticChange: PendingProgrammaticChange?
+    /// 토글 시퀀스 등 short-burst 동안 발생하는 어떤 입력소스 변경이든 programmatic으로
+    /// 간주한다. 단일 슬롯 `pendingProgrammaticChange`는 ID가 정확히 일치해야 매칭되는데,
+    /// macOS의 입력기 cycle 결과 입력소스 ID를 사전에 정확히 예측할 수 없는 케이스 보호.
+    private var programmaticBurstExpiresAt: Date?
 
     init(inputSourceManager: InputSourceManager) {
         self.inputSourceManager = inputSourceManager
@@ -57,6 +61,16 @@ final class InputSourceChangeObserver: NSObject, ObservableObject {
         pendingProgrammaticChange = nil
     }
 
+    /// 토글 등 ID를 미리 알 수 없는 시퀀스 동안 발생하는 모든 입력소스 변경을 programmatic으로
+    /// 처리한다. `duration` 후 자동 만료. 토글 시퀀스의 step1/step2를 감싸는 데 사용.
+    func beginProgrammaticBurst(duration: TimeInterval) {
+        programmaticBurstExpiresAt = Date().addingTimeInterval(duration)
+    }
+
+    func endProgrammaticBurst() {
+        programmaticBurstExpiresAt = nil
+    }
+
     @objc
     private func handleInputSourceDidChange() {
         let previousInputSourceID = currentInputSource?.id
@@ -74,6 +88,14 @@ final class InputSourceChangeObserver: NSObject, ObservableObject {
     }
 
     private func consumeProgrammaticChangeIfNeeded(matching inputSourceID: String) -> Bool {
+        // burst 모드: 활성이면 어떤 ID든 programmatic으로 간주.
+        if let burstExpiresAt = programmaticBurstExpiresAt {
+            if burstExpiresAt >= Date() {
+                return true
+            }
+            programmaticBurstExpiresAt = nil
+        }
+
         guard let pendingProgrammaticChange else {
             return false
         }

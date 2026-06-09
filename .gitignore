@@ -13,5 +13,6 @@
 
 # Build artifacts + local scratch
 dist/
+build/
 codex-skills/
 InputSourceHUD.xcodeproj/project.xcworkspace/

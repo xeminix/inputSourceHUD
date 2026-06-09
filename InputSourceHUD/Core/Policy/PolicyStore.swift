@@ -77,6 +77,18 @@ final class PolicyStore {
         )
     }
 
+    func upsertIgnoreRule(bundleID: String, displayName: String) {
+        let rule = AppRule(
+            bundleId: bundleID,
+            displayName: displayName,
+            policy: .ignore,
+            inputSourceId: nil
+        )
+
+        upsert(rule: rule)
+        Log.app.info("Upserted ignore rule for \(bundleID, privacy: .public)")
+    }
+
     private func createRuleIfNeeded(bundleID: String, displayName: String) {
         guard rule(for: bundleID) == nil else {
             Log.app.debug("Rule already exists for \(bundleID, privacy: .public)")

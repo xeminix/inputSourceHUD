@@ -186,6 +186,19 @@ final class AppEnvironment: ObservableObject {
         refreshApplicationCatalogs()
     }
 
+    func toggleIgnoreRule(for item: AppSelectionItem) {
+        let existing = policyStore.rule(for: item.bundleID)
+        if existing?.policy == .ignore {
+            policyStore.removeRule(for: item.bundleID)
+        } else {
+            policyStore.upsertIgnoreRule(
+                bundleID: item.bundleID,
+                displayName: item.displayName
+            )
+        }
+        refreshApplicationCatalogs()
+    }
+
     func defaultRuleInputSource() -> InputSource? {
         guard let inputSourceID = settingsStore.settings.global.defaultInputSourceId else {
             return nil
@@ -334,18 +347,42 @@ final class AppEnvironment: ObservableObject {
             ? nil
             : activeApplication
 
-        // force 정책 앱이면 재강제 시도 — 성공 시 manual change HUD는 표시하지 않음
-        if let targetApp = hudApplication {
-            Log.inputSource.debug(
-                "Unexpected non-programmatic input source change to \(inputSource.id, privacy: .public) while \(targetApp.bundleIdentifier ?? "unknown", privacy: .public) is frontmost; checking force policy"
-            )
-
-            if appSwitchCoordinator.enforceActivePolicyIfNeeded(
-                for: targetApp,
-                currentInputSource: inputSource
-            ) {
-                return
+        // force 정책 앱이고 앱 활성화 직후 자동 전환 윈도우 안의 변경 처리.
+        if let targetApp = hudApplication,
+           let bundleID = targetApp.bundleIdentifier,
+           let rule = policyStore.rule(for: bundleID),
+           rule.policy == .force,
+           let forceTargetID = rule.inputSourceId,
+           appSwitchCoordinator.isWithinAutoSwitchWindow(for: bundleID)
+        {
+            if inputSource.id == forceTargetID {
+                // 시스템이 자동으로 target 입력소스로 복원(macOS의 앱별 입력기 기억) →
+                // 사용자에게 정책이 적용됐음을 알리는 success HUD 표시.
+                Log.inputSource.debug(
+                    "Auto-restored to target for force-policy app \(bundleID, privacy: .public): \(inputSource.id, privacy: .public)"
+                )
+                hudWindowController.showSuccess(app: targetApp, inputSource: inputSource)
+            } else {
+                // target이 아닌 입력소스로 변경됨 (macOS의 "이전 언어 기억") → 무시하고
+                // enforce. 성공 시 manual HUD 안 띄움 (깜빡임 방지).
+                // 실패(maxAttempts 초과 / Secure Input / switch 실패) 시엔 사용자가 입력소스
+                // 불일치를 인지할 수 있도록 manual HUD를 fallback으로 표시.
+                let enforced = appSwitchCoordinator.enforceActivePolicyIfNeeded(
+                    for: targetApp,
+                    currentInputSource: inputSource
+                )
+                if enforced {
+                    Log.inputSource.debug(
+                        "Suppressing manual HUD for force-policy app \(bundleID, privacy: .public) (enforce succeeded within auto-switch window)"
+                    )
+                } else {
+                    Log.inputSource.notice(
+                        "Force enforce failed for \(bundleID, privacy: .public); showing manual HUD as fallback"
+                    )
+                    hudWindowController.showManualChange(app: targetApp, inputSource: inputSource)
+                }
             }
+            return
         }
 
         hudWindowController.showManualChange(app: hudApplication, inputSource: inputSource)
